@@ -1,0 +1,101 @@
+# Tiny Bubbles v2 — Feature Matrix
+
+*Compiled 2026-07-09. Companion to `00-SYNTHESIS2.md`. Row-level map of every recommended v2 feature to its
+**need** (ADHD / autism / both), **evidence** (verified, with strength label), **source repo/parts** (v2 clones
+under `/Users/ameyakashid/Desktop/adhd india/_sources2/`, or the shipped v1 tree `tiny-bubbles/`), the **app**
+it lives in (Kid / Parent / Backend), and **effort**.*
+
+**Need:** ADHD · AUTISM · BOTH.
+**Evidence strength:** **strong** (RCTs/meta-analyses on an EBP list) · **moderate** · **emerging** · **weak**
+(practice-common, thin controlled evidence — scaffold, don't over-claim) · **n/a** (product/safety requirement).
+**Effort:** Low (re-theme/reuse) · Med (adapt + reskin + new glue) · High (substantial new work).
+**"reuse-v1"** = extend a shipped v1 engine, not net-new. **"ref-only"** = copyleft/unlicensed donor, study
+UX only — do not ship its code.
+
+---
+
+## A. Autism support module (the net-new v2 kid scope)
+
+| # | Feature | Need | Evidence (verified) | Source repo · parts | App | Effort |
+|---|---|---|---|---|---|---|
+| A1 | **AAC communication board** — core-vocab tiles (want/more/help/stop/done/break/yes-no/feelings) + custom photo/record tiles; tap→TTS; category folders; **offline**; ≤1 tap anywhere | AUTISM (BOTH benefits) | **strong.** AAC = named NCAEP EBP (Steinbrenner 2020; Hume 2021); +aided-AAC→very large language gains Tau-U 0.85 & **does not suppress speech** (Pope, Light & Laubscher 2024, DOI 10.1007/s10803-024-06382-7); PECS communication↑/speech-null (Flippin 2010). ~200–400 core words = ~80% comms. | **`aac-native`** (MIT): `data/images/` symbols, `data/languages/card_*.json`, `api.js` TTS, `components/{card,announcer,speaking}.js`. **`speakeasy-aac`** (MIT): `src/types/index.ts` Symbol/Board model, `boardStore.ts`. Verify symbol-art license; ship cleared set. ref-only: `cboard` GPL. | Kid (+ Parent authors boards) | High |
+| A2 | **Visual schedule builder + player** — routine/day of picture/photo/TTS steps; check off; **"now/next" always visible** | BOTH | **strong.** Visual Supports EBP; visual activity schedules meet EBP criteria (Knight 2015). Mechanism: intolerance-of-uncertainty→anxiety r=0.62 (Jenkinson 2020). Scaffold: pair w/ prompting (Mouzakes 2025). | **`speakeasy-aac`** Board model (ordered `symbolIds[]`+`parentId`). **reuse-v1**: one-step task view / `TaskRunner`. Builder authored in Parent app. | Kid (player) + Parent (builder) | Med |
+| A3 | **First-Then card** — 2 visual cells (required→chosen preferred), TTS; kid picks the "then" | BOTH | **strong.** Premack + Antecedent-Based Intervention + Reinforcement (EBPs). | **reuse-v1**: `planStore` / `src/domain/plans.ts` (shipped if-then) re-skinned as visual first-then. `speakeasy-aac` 2-cell Board. | Kid | Low–Med |
+| A4 | **Transition warnings + priming** — "2 min / almost done / next: ___" visual + gentle chime + per-step countdown; **no abrupt auto-advance** | BOTH (autism-critical) | **moderate.** Dettmer 2000; Visual Supports + ABI; IU mechanism (Jenkinson 2020). | **reuse-v1**: `src/domain/timer.ts` + shipped visual-timers; add advance-warning/priming layer. | Kid | Low–Med |
+| A5 | **Sensory-preferences profile + global low-stim mode + break button** — per-child sound/haptics/motion/brightness toggles; "I need a break" anywhere (also AAC tile) → breathe/calm/move/dim | AUTISM (BOTH benefits) | **moderate** for the *break* (Exercise&Movement EBP; Fournier 2022; Tarr 2020). **Do NOT claim SI therapy** (Ayres SI = clinic OT, Schaaf 2014). | **`stillwave`** (MIT): `engine/haptics.ts`, `constants/theme.ts` low-arousal tokens. **reuse-v1**: soundscapes + breathing + calm UI + settings resolver. | Kid + Parent (profile) | Med |
+| A6 | **Non-reading-first, predictable, calm UI** — picture+icon+color+**TTS everywhere**; consistent nav; autism preset (low novelty/stim, no surprises) | BOTH (autism-stricter) | **strong** (cross-cutting; Visual Supports). Competitor failure = requires-reading+adult (Zones app no VO). | **reuse-v1**: theme resolvers, `ModeKeyed` copy, `tts.ts`; add `neuroProfile` axis. **`stillwave`** pastel tokens. | Kid | Med |
+| A7 | **Emotion identification + strategy menu** — "how do I feel?" grid → feelings vocab w/ intensity → "what could help?" → breathe/break/fidget/tell-adult; optional 4-color arousal | BOTH | **strong** for the *mechanism* (Emotion-Regulation Training; Nuske 2023). **Zones™ brand NOT an EBP** (Mason 2024) — build generic, don't license/claim Zones. | **`feelings-wheel`** (MIT data): `languages/*.toml` taxonomy (6→24→48, age-tiered), `PALETTE`→zone colors. **reuse-v1**: shipped `mood-checkin`/MoodLog, extend with vocab+strategy. ref-only: `TheDormouse/ZOR`. | Kid + Parent (glance) | Med |
+| A8 | **Video modeling on steps** — attach short model / point-of-view video (parent-recorded) to any schedule/routine step | AUTISM (BOTH benefits) | **strong.** Video Modeling EBP; strong effects + maintenance/generalization (Bellini & Akullian 2007). Answers Goally "video of the task" ask. | New glue: camera (`expo-image-picker`, shipped in v1) + **Firebase Storage**. Play in schedule step (A2). | Kid (play) + Parent (record) | Med |
+| A9 | **Social narratives builder** — first-person picture+TTS narrative for a situation; **Bloop drafts from parent facts, parent approves before child sees** | AUTISM | **mixed — weakest link.** Social Narratives EBP *category*, but Social Stories™ mixed-to-null (Qi 2018; PMC10791792). **Position as preparation aid, not therapy.** | **reuse-v1**: board/step model + TTS. Bloop draft = the safe LLM use (§2, parent-review gate). ref-only concept: `mahtabb90/autism-companion-ai`. | Parent (author+approve) + Kid (view) | Med |
+| A10 | **Guided movement / "wiggle" break** (30–90s) from the break menu | BOTH | **moderate.** Exercise&Movement EBP (Fournier 2022; Tarr 2020). | Extends A5. New short-activity glue; optional Lottie/Rive movement prompt. | Kid | Low–Med |
+| A11 | **AAC beyond requesting** (later) — sentence-building, commenting/social tiles, word prediction, aided-language prompts | AUTISM | **strong** category; commenting is the documented gap (systematic reviews). | **`speakeasy-aac`** sentence logic; **`aac-native`** `announcer.js` strip; **`OpenAAC-flutter`** (Apache) text→symbol pattern for a Gemini "suggest a tile" helper. | Kid + Parent | High |
+| A12 | **Structured work-system view** (later) — what work / how much / when done / what next | AUTISM (BOTH benefits) | **moderate.** TEACCH component (Virués-Ortega 2013) → Visual Supports EBP. Don't brand "TEACCH." | **`speakeasy-aac`** Board model variant. **reuse-v1**: task runner. | Kid + Parent | Med |
+| A13 | **Parent AAC/vocabulary analytics** (later) — tile usage + growth over time | AUTISM | **n/a** (data-based decision-making; generalization support). | New: Firestore `children/{id}/activity` aggregate → Parent dashboard. | Parent | Med |
+
+---
+
+## B. Bloop — companion character + safe conversational layer
+
+| # | Feature | Need | Evidence (verified) | Source repo · parts | App | Effort |
+|---|---|---|---|---|---|---|
+| B1 | **Bloop character layer** — expressive Rive state machine (idle-breathe/blink/tap-react/celebrate/mood-mirror/co-regulate), **100% deterministic, no LLM**, always-on, lovable | BOTH | **moderate/strong** (engagement): baby-schema→caregiving via nucleus accumbens (Glocker 2009 *Ethology*/*PNAS*; Borgi 2014); Tamagotchi effect; caregiving-reframe (Finch/Joon); familiar>novel for autistic kids (Rakhymbayeva 2021). | **`rive-react-native`** (MIT) `fireState`/`setInputState`; **`lottie-react-native`** (Apache) expressions/confetti; `moti`/Reanimated micro-motion. **Bespoke `.riv` art required** (samples are demos). | Kid | High |
+| B2 | **Bloop chat surface** — `gifted-chat` frame + QuickReplies (kid-safe tap / AAC) + TypingIndicator ("thinking"); persists transcript to Firestore | BOTH | **n/a** (UI shell; safety is the proxy). AI-companion upside only as monitored "copilot" (Papadopoulos 2025, DOI 10.1177/27546330251370657). | **`react-native-gifted-chat`** (MIT): `GiftedChat`, `QuickReplies`, `TypingIndicator`, custom `renderBubble/Avatar`, `messages[]`→Firestore. | Kid | Med |
+| B3 | **Persona system prompt** — Personality/Environment/Tone/Goal/Guardrails; literal language, short turns, celebrate effort, never needy/sad; **behavioral spec not security boundary** | BOTH (autism literal-language) | **moderate.** Persona prompting reliably shapes tone/voice (PromptHub); autism literal-language need (`autism-science.md` §11). | **`nemo-guardrails`** `abc/prompts.yml` policy structure (swap bullets); Anam 5-section skeleton. Write from scratch (PromptProof GPL = ref-only). | Backend | Med |
+| B4 | **Novelty-refresh / durability layer** — opt-in previewed cosmetics, collectible Bloop "friends", quest themes; forewarned, no surprise UI change | ADHD (novelty) vs AUTISM (predictable core) | **moderate.** 4–8wk novelty cliff (Joon/Timily); familiar>novel for autism → predictable core + opt-in novelty (Rakhymbayeva 2021; Pokémon Smile 100+ collection). | **reuse-v1**: shipped `questStore` / `src/domain/{quests,novelty}.ts`. Rive/Lottie cosmetic swaps. | Kid + Parent (novelty pref) | Med |
+| B5 | **Sensory & autonomy panel** — per-channel toggles (sound/haptics/animation/celebration/voice) + Low-Sensory/Standard/Lively presets; name Bloop; pick look 3–6; task order; chat/voice on-off; Calm Mode | BOTH | **strong** (autism sensory-UX non-negotiable; UXPA/Tiimo). SDT autonomy (v1). | **reuse-v1**: settings resolvers, curated-autonomy caps (3/6), `expo-haptics`/`expo-audio`. **`stillwave`** haptics. | Kid + Parent | Med |
+
+---
+
+## C. Super-guardrail LLM proxy (Backend — Cloud Functions, TS)
+
+| # | Feature | Need | Evidence (verified) | Source repo · parts | App | Effort |
+|---|---|---|---|---|---|---|
+| C1 | **Server-side proxy skeleton** — App Check + Firebase-Auth ID-token gate; load child settings + AI on/off; rate-limit; provider-agnostic (Gemini default / DeepSeek alt) one contract | BOTH | **n/a / strong-practice.** Model is never the safety boundary (Safe-Child-LLM, Jiao 2025 arXiv:2506.13510); sandwich the model (arXiv:2604.23887). | **`firebase-cloud-functions-typescript-example`** (MIT): `verify-idtoken-interceptor.ts`, controller pattern (`bloop-controller`). **`llm-guard`** `llm_guard_api/app.py` endpoint/auth/timeout/rate-limit shape. | Backend | Med |
+| C2 | **Input shield** — hygiene/invisible-unicode → deterministic blocklists → PII detect → injection classifier → topic-scope → crisis detect → optional LLM self-check; spotlight/delimit input | BOTH | **strong.** Layered fail-fast; injection defenses (arXiv:2505.18333); adult filters miss kid phrasing (Safe-Child-LLM). | **`llm-guard`** `input_scanners/*` (regex/substring port 1:1 to TS); **`nemo-guardrails`** `self_check_input` + `gcp_moderate_text` + `jailbreak_detection`; GCP Model Armor / DLP for ML checks. | Backend | High |
+| C3 | **Model call — Gemini Flash (strict) / DeepSeek (wrapped)** — explicit `BLOCK_LOW_AND_ABOVE` on all HarmCategories (default is OFF!); DeepSeek = zero native safety → identical non-optional shields | BOTH | **strong.** Gemini 2.5/3 default OFF (must set strict); DeepSeek 100% jailbreak success (Cisco/Unit 42); "sits inside your guardrail stack." | **`firebase-functions-samples`** `remote-config-server-with-vertex/` (server Gemini via `@google-cloud/vertexai`); add DeepSeek branch; **`nemo-guardrails`** `llama_guard/` pre-screen for DeepSeek. | Backend | Med |
+| C4 | **Output shield** — toxicity/bias/sexual/violence → output ban-topics → PII-leak → malicious-URL strip → no-refusal→warm fallback → relevance/reading-level. **Only render pre-approved tokens; TTS only voices moderated text** | BOTH | **strong.** Output filtering is the only defense that holds vs adaptive injection (arXiv:2604.23887). | **`llm-guard`** `output_scanners/*` (`toxicity,bias,sensitive,no_refusal,relevance,malicious_urls`); `base.py` `(sanitized,valid,score)` contract. | Backend | High |
+| C5 | **On-fail state machine** — REASK→REFRAIN→FILTER→CUSTOM(escalate); **fail safe not open** (timeout/error → canned kid-safe line) | BOTH | **strong-practice.** | **`guardrails-ai`** `types/on_fail.py` `OnFailAction`; `async_guard.py` (stream-validate); `validator_base.py`. | Backend | Med |
+| C6 | **Topic-scope allow-list** — ADHD/autism supports only; off-scope → warm redirect **before any model call**; curated QuickReplies for young kids | BOTH | **strong-practice** (cheapest biggest guardrail; removes romance/politics/medical-dosing/news whole classes). | **`llm-guard`** `input_scanners/ban_topics.py`; **`nemo-guardrails`** `library/topic_safety/`. QuickReplies in `gifted-chat`. | Backend + Kid | Low–Med |
+| C7 | **PII refusal (both directions) + data minimization** — refuse/scrub inbound & outbound; **redact raw PII before storing** (log the fact, not the PII); vault pattern if a name must pass | BOTH | **strong (law).** COPPA 2025 (biometrics incl.); UK Children's Code minimum-data. | **`llm-guard`** `anonymize.py`/`sensitive.py`/`vault.py`; GCP DLP / Model Armor Sensitive-Data; **`nemo-guardrails`** `sensitive_data_detection/`. | Backend | Med |
+| C8 | **Crisis-escalation-to-parent** — recall-biased detection → **pre-written safe-messaging** in-chat (validate/hope/trusted-grown-up/localized resource card, no means) → **FCM alert to parent + transcript window** → escalation ladder; never bare-refuse, never secrecy | BOTH | **strong (mandate).** APA Nov 2025 crisis pathways + human contact; Character.AI/Setzer failure; safe-messaging (988 toolkit, reportingonsuicide.org); SB 243. | **`firebase-cloud-functions-typescript-example`** `event-triggers` (`onWrite`→alert); **`firebase-functions-samples`** `fcm-notifications/`; **`nemo-guardrails`** `disallowed.co`; `llm-guard` `sentiment/emotion` signals. **Localize hotlines (988 US; India needs own).** | Backend + Parent | High |
+| C9 | **Mock-first `bloopProvider` seam** — TS port interface w/ deterministic offline MOCK default + real-proxy impl behind the seam; provider swap = one-line; app tree stays green/offline/no-egress | BOTH | **n/a** (v1 discipline: mirrors `purchases.ts`/`storage` ports; Moxie graceful-degradation). | **reuse-v1**: mock-seam pattern from `src/services/purchases.ts` + storage port. | Kid + Backend | Low–Med |
+| C10 | **Adversarial red-team suite as CI gate** — Safe-Child-LLM-derived cases (indirect ideation, method-seeking, abuse disclosure, "hide from mom", injection) + psychologist review of crisis copy | BOTH | **strong (mandate).** APA/Common Sense demand predeployment red-teaming. | Write from scratch (Safe-Child-LLM arXiv:2506.13510 = cases; PromptProof GPL / tldrsec unlicensed = ref-only checklist). | Backend (CI) | Med |
+
+---
+
+## D. Firebase backend + Parent app + monitoring
+
+| # | Feature | Need | Evidence (verified) | Source repo · parts | App | Effort |
+|---|---|---|---|---|---|---|
+| D1 | **Parent auth + Kid profiles under a verified parent** — email/password login; child = sub-resource; custom claims `role: parent\|kid` | BOTH | **n/a (COPPA).** | **`expo-firebase-boilerplate-v2`** (MIT, port JS→TS): `scenes/{login,registration,initial}`, `RootStack.js` gating. Scrub demo creds. | Parent + Backend | Med |
+| D2 | **COPPA consent gate (age assurance beyond attestation)** — verifiable parental consent before a child account; auth-blocking function | BOTH | **strong (law).** COPPA 2025 verifiable consent; Common Sense "age assurance beyond self-attestation". | **`firebase-functions-samples`** `auth-blocking-functions/`. Consent record in `users/{parentUid}`. | Parent + Backend | Med |
+| D3 | **Parent↔child link + real-time monitoring dashboard** — guardian-of link; live activity glance (step-done, tokens, mood, breaks, routine completion) | BOTH | **n/a** (parent-is-the-human-in-the-loop; every serious app has a caregiver layer, `market-teardown.md` §F8). | **`expo-firebase-boilerplate-v2`** `follow/follower`→guardian link + `UserDataContext` real-time provider. Firestore `children/{id}/activity`. | Parent + Backend | Med |
+| D4 | **Transcript visibility** — full, searchable, moderation-flags-highlighted; TTL-expiring; PII-redacted | BOTH | **strong (COPPA + oversight).** No indefinite retention (COPPA 2025). | Firestore `children/{id}/transcripts` (from proxy C4). `gifted-chat` `messages[]` serialized. TTL Cloud Function. | Parent + Backend | Med |
+| D5 | **Controls** — Bloop master on/off; per-category topic scope; free-text-vs-chips; usage/time limits; retention window; crisis locale | BOTH | **strong (SB 243 / APA / COPPA).** | New Parent screens → `children/{id}/settings`; proxy reads flags via interceptor (C1). | Parent + Backend | Med |
+| D6 | **Board/schedule/social-narrative authoring** — parent composes AAC boards, schedules, first-then, narratives (Bloop-drafted narratives require approval) | AUTISM (BOTH) | **strong** (feeds A1/A2/A3/A9). | **`speakeasy-aac`** Board model + `boardStore` (Firestore-backed); **`cboard`** board-builder UX (GPL, ref-only). | Parent + Backend | High |
+| D7 | **Persistent AI-disclosure + break nudges** — "Bloop is an AI helper, not a person or a doctor" (parent + age-appropriate child); per-3h break reminder | BOTH | **strong (mandate).** APA persistent disclaimer; SB 243 minor-disclosure + 3h breaks. | New glue in Kid + Parent UI; nudge timer. | Kid + Parent | Low |
+| D8 | **Data rights + minimization ops** — parent review+delete child data; TTL auto-delete; **no ad/analytics SDKs in Kid app**; LLM = bound processor (no training); written retention + security programs | BOTH | **strong (law).** COPPA 2025 retention/security-program; separate-opt-in for 3rd-party (answer: none). | **`firebase-functions-samples`** `delete-unused-accounts-cron/` pattern; Firestore TTL; locked-default `firestore.rules`. | Parent + Backend | Med |
+| D9 | **Offline-first graceful degradation** — core AAC/schedule/first-then/emotion/token loop works with network + LLM OFF; Firebase is additive sync/oversight | BOTH | **n/a (Moxie lesson).** Don't brick the child's voice/routines on shutdown (`market-teardown.md` §D1). | **reuse-v1**: `storage` port over AsyncStorage (`tb/*`) as source of truth; thin Firestore sync adapter on top. | Kid | Med |
+| D10 | **Cross-platform (Android + iOS) + multilingual** — the structural gap in premium AAC (iOS-only $249–300) | BOTH | **strong (access).** ~⅓–½ of minimally-verbal kids benefit from AAC (Pope 2024); Avaz India multilingual benchmark. | **reuse-v1**: Expo/RN cross-platform. i18n: `aac-native` `card_*.json` + `feelings-wheel` 5-lang taxonomy + v1 `src/i18n/`. | Kid + Parent | Med (per-locale) |
+
+---
+
+## Effort / sequencing roll-up
+
+| Group | Rows | Theme | Rough size |
+|---|---|---|---|
+| **A. Autism module** | A1–A13 | Net-new kid scope, reusing v1 engines | A1/A11 High; A2/A5/A7/A8/A9/A12/A13 Med; A3/A4/A10 Low–Med |
+| **B. Bloop character/chat** | B1–B5 | Two-layer companion (character always-on, chat gated) | B1 High; B2/B3/B4/B5 Med |
+| **C. Guardrail proxy** | C1–C10 | Server-side safety (the load-bearing risk) | C2/C4/C8 High; C1/C3/C5/C7/C10 Med; C6/C9 Low–Med |
+| **D. Backend + Parent** | D1–D10 | Login, monitoring, consent, controls, offline-first | D6 High; most Med; D7 Low |
+
+**Ordering** (from `00-SYNTHESIS2.md` §6): backend + Parent shell + consent gate (D1–D3, D8) → autism core
+reusing v1 engines (A1→A2→A3→A7→A5) → Bloop character layer (B1–B2, deterministic, no LLM) → Bloop proxy behind
+the mock-first seam (C9→C1→C2→C3→C4→C5→C8) ship mock-first then wire Gemini → monitoring/transcripts/alerts/
+controls (D4–D7) → harden (C10 red-team CI, TTL/retention D8, rules, App Check, psychologist review).
+
+**Global v2 invariants** (extend v1's): anti-shame (no failure/streak-loss/guilt, incl. Bloop never withers) ·
+curated autonomy (3/6 caps) · acquisition-only downgrade · no raw `ageMode`/`neuroProfile` in components ·
+PIN-gated sensitive actions · **NEW:** AI only via the server proxy behind the mock-first seam (on-device core
+has no model in the loop) · app-tree no-egress (egress only in `functions/`) · offline-first core (D9) · PII
+redacted before storage · TTL retention · no ad/analytics SDKs in the Kid app.
