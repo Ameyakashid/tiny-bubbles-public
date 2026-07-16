@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.base.json",
+  // composite:true → TS project references (02-architecture §1.3): the Node
+  // side (functions/) builds this project to lib/ first; the app side (Metro +
+  // tsc `paths`) consumes src/ directly. RN-free by contract.
+  "compilerOptions": {
+    "composite": true,
+    "target": "ES2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["ES2022"],
+    "outDir": "lib",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    // "node" only — the fs-walking gate wrapper (compliance/symbolLicenseNode)
+    // is Node-side; everything else stays runtime-agnostic pure TS.
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"]
+}

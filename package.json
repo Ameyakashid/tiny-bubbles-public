@@ -1,0 +1,26 @@
+{
+  "name": "tiny-bubbles",
+  "version": "2.0.0",
+  "private": true,
+  "license": "MIT",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "functions"
+  ],
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "kid:verify": "npm -w @tiny-bubbles/kid run typecheck && npm -w @tiny-bubbles/kid test && npm -w @tiny-bubbles/kid run export:web",
+    "parent:verify": "npm -w @tiny-bubbles/parent run typecheck && npm -w @tiny-bubbles/parent test && npm -w @tiny-bubbles/parent run export:web",
+    "shared:verify": "npm -w @tiny-bubbles/shared run typecheck && npm -w @tiny-bubbles/shared test",
+    "fns:verify": "npm --prefix functions run build && npm --prefix functions test",
+    "verify:all": "npm run shared:verify && npm run kid:verify && npm run parent:verify && npm run fns:verify",
+    "gate:evidence-honesty": "bash scripts/gate-evidence-honesty.sh",
+    "gate:symbol-license": "bash scripts/gate-symbol-license.sh",
+    "gate:anti-shame": "bash scripts/gate-anti-shame.sh",
+    "gate:provenance": "bash scripts/gate-provenance.sh",
+    "gates": "npm run gate:evidence-honesty && npm run gate:symbol-license && npm run gate:anti-shame && npm run gate:provenance",
+    "ship-gate": "bash scripts/ship-gate.sh"
+  }
+}

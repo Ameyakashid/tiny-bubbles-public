@@ -1,0 +1,20 @@
+{
+  "extends": ["expo/tsconfig.base", "../../tsconfig.base.json"],
+  "compilerOptions": {
+    "strict": true,
+    // `paths` is not merged by tsc, so the shared aliases from
+    // ../../tsconfig.base.json are re-declared here relative to this app.
+    "paths": {
+      "@/*": ["./*"],
+      "@tiny-bubbles/shared": ["../../packages/shared/src/index.ts"],
+      "@tiny-bubbles/shared/*": ["../../packages/shared/src/*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ]
+}

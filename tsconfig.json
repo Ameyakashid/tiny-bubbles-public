@@ -1,0 +1,11 @@
+{
+  // Solution-style root tsconfig (TS project references, 02-architecture §1.3).
+  // The Node side builds with `tsc -b` from here (shared → functions). The two
+  // Expo apps are NOT referenced (jest-expo/Metro apps are noEmit, not
+  // composite); their floors run per-workspace (`npm run typecheck -ws`).
+  "files": [],
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./functions" }
+  ]
+}

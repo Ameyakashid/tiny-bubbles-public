@@ -1,0 +1,172 @@
+rules_version = '2';
+
+// firestore.rules — Tiny Bubbles v2 (w1 M1.2 — 02-architecture §2.2/§2.4/§8 #21/#27/#28).
+//
+// Authored from the donor LOCKED DEFAULT (firebase-cloud-functions-typescript-
+// example, MIT: `allow read, write: if false;`) and opened per-collection by
+// ownership + guardian-link + role claim. FAIL CLOSED: anything not explicitly
+// opened below is denied by the catch-all.
+//
+// Identity model (w1 §2.1): parents sign in with email/password and carry the
+// custom claim role="parent"; kid devices sign in with a SERVER-MINTED custom
+// token carrying {role:"kid", parentUid, childId} where childId === uid (§8
+// #28 — the server derives childId from the authed uid, never client input).
+//
+// Matrix (roadmap M1.2 acceptance):
+//   users/{uid}                 parent read/update own; create/delete admin-only
+//   children/{childId}          parent r/w own (guardian link immutable); kid read own
+//     settings/current          parent r/w; kid read + may write ONLY `preferences`
+//     boards|schedules|narratives  parent-authored; kid read (narratives: APPROVED only)
+//     activity/{eventId}        kid CREATE own (idempotent re-set allowed); parent read
+//     reports/{rangeKey}        kid write own; parent read (§8 #21)
+//     transcripts/{turnId}      ADMIN-ONLY write (the proxy chokepoint, §2.5); parent read; kid NO access
+//     alerts/{alertId}          ADMIN-ONLY write; parent read; kid NO access
+//   safetyReports/**            ADMIN-ONLY read AND write (abuse/csam queue — NEVER parent-visible, §8 #27)
+//   config/global               signed-in read; admin-only write
+//
+// NOTE (env floor): this file ships with a needs-Java emulator suite under
+// functions/__emulator__/ — run `firebase emulators:exec --only firestore
+// "npm run test:emulator"` BEFORE any deploy (see functions/docs/RULES-REVIEW.md).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- helpers -------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isParent() {
+      return isSignedIn() && request.auth.token.role == 'parent';
+    }
+    function isKid() {
+      return isSignedIn() && request.auth.token.role == 'kid';
+    }
+    // Kid identity: uid IS the childId, and the minted claim must agree (§8 #28).
+    function isOwnKid(childId) {
+      return isKid()
+        && request.auth.uid == childId
+        && request.auth.token.childId == childId;
+    }
+    // Guardian link via the child doc (for subcollections).
+    function parentOwnsChild(childId) {
+      return isParent()
+        && get(/databases/$(database)/documents/children/$(childId)).data.parentUid == request.auth.uid;
+    }
+
+    // ---------- users/{parentUid} --------------------------------------
+    match /users/{uid} {
+      allow read: if isParent() && request.auth.uid == uid;
+      // Created by the onParentCreated trigger; consent[] is appended by the
+      // recordConsent callable — both admin. The parent may update their own
+      // prefs but can never rewrite uid/role.
+      allow update: if isParent()
+        && request.auth.uid == uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == 'parent';
+      allow create, delete: if false;
+    }
+
+    // ---------- children/{childId} --------------------------------------
+    match /children/{childId} {
+      allow read: if isOwnKid(childId)
+        || (isParent() && resource.data.parentUid == request.auth.uid);
+      // provisionChild / deleteChildData callables own create/delete (admin).
+      allow create, delete: if false;
+      // Parent edits (name/ageMode/neuroProfile); the guardian link and the
+      // childId are IMMUTABLE.
+      allow update: if isParent()
+        && resource.data.parentUid == request.auth.uid
+        && request.resource.data.parentUid == resource.data.parentUid
+        && request.resource.data.childId == resource.data.childId;
+
+      // ---------- settings/current (two-way merge surface, §8 #1) -------
+      match /settings/{settingsId} {
+        allow read: if parentOwnsChild(childId) || isOwnKid(childId);
+        // Parent writes anything. The KID may write ONLY the `preferences`
+        // map — `controls` is parent-authoritative (§2.4): an update must
+        // leave `controls` byte-identical; a create must not carry it.
+        allow create: if parentOwnsChild(childId)
+          || (isOwnKid(childId) && !request.resource.data.keys().hasAny(['controls']));
+        allow update: if parentOwnsChild(childId)
+          || (isOwnKid(childId)
+              && (!('controls' in request.resource.data)
+                  || request.resource.data.controls == resource.data.controls));
+        allow delete: if false;
+      }
+
+      // ---------- parent-authored content, kid pull-down ----------------
+      match /boards/{boardId} {
+        allow read: if parentOwnsChild(childId) || isOwnKid(childId);
+        allow write: if parentOwnsChild(childId);
+
+        match /symbols/{symbolId} {
+          allow read: if parentOwnsChild(childId) || isOwnKid(childId);
+          allow write: if parentOwnsChild(childId);
+        }
+      }
+      match /schedules/{scheduleId} {
+        allow read: if parentOwnsChild(childId) || isOwnKid(childId);
+        allow write: if parentOwnsChild(childId);
+      }
+      match /narratives/{narrativeId} {
+        // Kid sees APPROVED narratives only (w5 approval gate).
+        allow read: if parentOwnsChild(childId)
+          || (isOwnKid(childId) && resource.data.approvedAt != null);
+        allow write: if parentOwnsChild(childId);
+      }
+
+      // ---------- activity (one-way-UP mirror; kid-create, parent-read) --
+      match /activity/{eventId} {
+        allow read: if parentOwnsChild(childId);
+        // Idempotent drain: doc id must equal the client localId; a retried
+        // item may re-`set` the SAME doc (update) but can never rewrite the
+        // event identity. Never deletable by a client.
+        allow create: if isOwnKid(childId)
+          && request.resource.data.id == eventId;
+        allow update: if isOwnKid(childId)
+          && request.resource.data.id == resource.data.id;
+        allow delete: if false;
+      }
+
+      // ---------- reports (kid-write own / parent-read — §8 #21) --------
+      match /reports/{rangeKey} {
+        allow read: if parentOwnsChild(childId);
+        allow create, update: if isOwnKid(childId)
+          && request.resource.data.rangeKey == rangeKey;
+        allow delete: if false;
+      }
+
+      // ---------- transcripts (ADMIN-ONLY write = the redaction chokepoint,
+      // §2.5; parent-read; the kid has NO access) -------------------------
+      match /transcripts/{turnId} {
+        allow read: if parentOwnsChild(childId);
+        allow write: if false;
+      }
+
+      // ---------- alerts (ADMIN-ONLY write; parent-read; kid NO access) --
+      match /alerts/{alertId} {
+        allow read: if parentOwnsChild(childId);
+        // Acknowledgement flows through a callable (server stamps
+        // acknowledgedAt/By + cancels re-escalation) — no client write path.
+        allow write: if false;
+      }
+    }
+
+    // ---------- safetyReports (mandated-reporter queue, §8 #27) ----------
+    // NEVER parent- or kid-visible: abuse/csam has NO parent auto-alert.
+    match /safetyReports/{reportId} {
+      allow read, write: if false;
+    }
+
+    // ---------- config/{global} ------------------------------------------
+    match /config/{configId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // ---------- LOCKED DEFAULT (donor) — keep LAST ------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

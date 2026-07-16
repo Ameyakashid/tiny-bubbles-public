@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Tiny Bubbles — palette CSS variables (doc 61 §2 / doc 66 M2).
+ *
+ * One class per palette; `ThemeProvider` applies the matching class
+ * (`themeClass` token) to its subtree so NativeWind className colors
+ * (e.g. `bg-canvas`, `text-text`, `border-border`) resolve to the
+ * mode-correct values. The SAME hexes live in `src/theme/tokens.ts`
+ * (the canonical TS copy consumed by `useThemeTokens()`); keep them in sync.
+ *
+ *   .tb-reef       -> Reef       (young, standard)
+ *   .tb-tide       -> Tide       (older, standard, light)
+ *   .tb-tide-dark  -> Tide dark  (older, standard, dark)
+ *   .tb-stillwater -> Stillwater (lowStim, overlays either age)
+ *
+ * Deliberately NO child-facing error/danger/angry color. `--gentle-alert`
+ * is parent-facing only. `:root` defaults to Reef so anything rendered
+ * outside a provider still looks sane.
+ */
+@layer base {
+  :root,
+  .tb-reef {
+    --canvas: #eaf6ff;
+    --canvas-grad-top: #eaf6ff;
+    --canvas-grad-bot: #fff4fa;
+    --surface: #ffffff;
+    --surface-alt: #f1f8ff;
+    --surface-sunken: #e3eff8;
+    --primary: #1ea7e6;
+    --primary-deep: #0e6fa8;
+    --on-primary: #ffffff;
+    --secondary: #ff7a66;
+    --accent: #ffc53d;
+    --grow: #2ed3a0;
+    --token: #ffb020;
+    --token-glow: #ffe08a;
+    --success: #13a66b;
+    --success-surface: #d9f5e8;
+    --info: #4c8dd6;
+    --gentle-alert: #e8941f;
+    --text: #15293a;
+    --text-dim: #52677a;
+    --on-dark: #f4fbff;
+    --border: #d3e6f2;
+    --separator: #e6f0f7;
+    --focus-ring: #0e6fa8;
+    --scrim: rgba(10, 32, 52, 0.72);
+  }
+
+  .tb-tide {
+    --canvas: #f3f7fb;
+    --canvas-grad-top: #f3f7fb;
+    --canvas-grad-bot: #ecf2f8;
+    --surface: #ffffff;
+    --surface-alt: #edf3f8;
+    --surface-sunken: #e2eaf1;
+    --primary: #1c84ad;
+    --primary-deep: #10617f;
+    --on-primary: #ffffff;
+    --secondary: #5566e0;
+    --accent: #17b3ad;
+    --grow: #1fb37e;
+    --token: #e2a92f;
+    --token-glow: #f7dd9c;
+    --success: #159469;
+    --success-surface: #d5efe5;
+    --info: #3e7fc2;
+    --gentle-alert: #d6881a;
+    --text: #13202b;
+    --text-dim: #54677a;
+    --on-dark: #eaf2f8;
+    --border: #d9e3ec;
+    --separator: #e6edf3;
+    --focus-ring: #1c84ad;
+    --scrim: rgba(8, 18, 26, 0.74);
+  }
+
+  .tb-tide-dark {
+    --canvas: #0e1822;
+    --canvas-grad-top: #0e1822;
+    --canvas-grad-bot: #101f2c;
+    --surface: #17242f;
+    --surface-alt: #1e2e3b;
+    --surface-sunken: #0b141c;
+    --primary: #39a7ce;
+    --primary-deep: #7fcde6;
+    --on-primary: #08131b;
+    --secondary: #8a97f0;
+    --accent: #3fd0c8;
+    --grow: #3bd79b;
+    --token: #f3c75a;
+    --token-glow: #5a4b22;
+    --success: #3bd79b;
+    --success-surface: #13322a;
+    --info: #6fa8e0;
+    --gentle-alert: #f0a93a;
+    --text: #eaf2f8;
+    --text-dim: #9fb2c2;
+    --on-dark: #eaf2f8;
+    --border: #2a3b49;
+    --separator: #21323f;
+    --focus-ring: #39a7ce;
+    --scrim: rgba(2, 7, 11, 0.8);
+  }
+
+  .tb-stillwater {
+    --canvas: #eef0ec;
+    --canvas-grad-top: #eef0ec;
+    --canvas-grad-bot: #eef0ec;
+    --surface: #f7f8f5;
+    --surface-alt: #e8ebe5;
+    --surface-sunken: #dfe3dc;
+    --primary: #5e8398;
+    --primary-deep: #3f6173;
+    --on-primary: #fbfdfc;
+    --secondary: #7e9a93;
+    --accent: #c7b187;
+    --grow: #6fa98c;
+    --token: #bfa06a;
+    --token-glow: #e3d5b6;
+    --success: #5e977a;
+    --success-surface: #dce8e0;
+    --info: #6c8aa0;
+    --gentle-alert: #b68a4a;
+    --text: #26323a;
+    --text-dim: #5c6a72;
+    --on-dark: #f2f4f0;
+    --border: #d5dad0;
+    --separator: #e1e5dc;
+    --focus-ring: #3f6173;
+    --scrim: rgba(38, 50, 58, 0.55);
+  }
+}

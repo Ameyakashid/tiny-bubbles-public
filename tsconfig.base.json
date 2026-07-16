@@ -1,0 +1,15 @@
+{
+  // Root shared compilerOptions (02-architecture §1.2). Every workspace
+  // tsconfig `extends` this file. `paths` entries are resolved relative to
+  // THIS file (no `baseUrl` — deprecated in TS 6). NOTE: `paths` is NOT
+  // merged by tsc — a workspace that declares its own `paths` (apps/kid
+  // keeps `@/* → ./*`) must re-declare the @tiny-bubbles/shared aliases
+  // relative to itself.
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@tiny-bubbles/shared": ["./packages/shared/src/index.ts"],
+      "@tiny-bubbles/shared/*": ["./packages/shared/src/*"]
+    }
+  }
+}

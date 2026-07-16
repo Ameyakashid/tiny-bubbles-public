@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// storage.rules — Tiny Bubbles v2 (w1 M1.2). Donor locked default, opened for
+// exactly ONE tree: parent-recorded model clips (A8 video modeling) under
+// children/{childId}/videos/*. Ownership is verified CROSS-SERVICE against the
+// Firestore guardian link (children/{childId}.parentUid) — never a client
+// claim alone. The kid device may READ its own child's clips (custom-token
+// uid === childId). Everything else is denied.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    match /children/{childId}/videos/{videoId} {
+      allow read: if request.auth != null
+        && (request.auth.uid == childId
+            || (request.auth.token.role == 'parent'
+                && firestore.get(/databases/(default)/documents/children/$(childId)).data.parentUid == request.auth.uid));
+      // Parent-only upload; bounded size; video content only.
+      allow write: if request.auth != null
+        && request.auth.token.role == 'parent'
+        && firestore.get(/databases/(default)/documents/children/$(childId)).data.parentUid == request.auth.uid
+        && request.resource.size < 50 * 1024 * 1024
+        && request.resource.contentType.matches('video/.*');
+    }
+
+    // LOCKED DEFAULT (donor) — keep LAST.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
